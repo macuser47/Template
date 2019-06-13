@@ -1,0 +1,6 @@
+->Pretty printing for list (fit terminal size like ls)
+->auto-fill tab behaviour for new
+->nice colors
+
+->template repository server
+->template install

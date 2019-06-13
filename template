@@ -1,0 +1,104 @@
+#!/usr/bin/python3
+import sys
+import json
+import subprocess
+import os
+from collections import namedtuple
+
+BASE_URI = os.path.expanduser("~/.template")
+CONFIG_FILE = "template.json"
+COPY_DIRECTORY = "files"
+SHELL = "bash"
+
+class TemplateEngine:
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+        self.dir = os.path.join(BASE_URI, self.name)
+        if not os.path.isdir(self.dir):
+            print("{}: {} does not exist".format(name, self.dir)) 
+            raise SystemExit
+
+        try:
+            with open(os.path.join(self.dir, CONFIG_FILE)) as f:
+                self.data = json.load(f)
+        except OSError:
+            print("{}: template.json not found".format(self.name))
+            raise SystemExit
+        except json.decoder.JSONDecodeError:
+            print("{}: template.json incorrectly formatted".format(self.name))
+            raise SystemExit
+
+        if "cwd" in self.data.keys():
+            self.cwd = os.path.expanduser(self.data["cwd"])
+        else:
+            self.cwd = "."
+
+    def _copy_files(self):
+        files_uri = os.path.join(self.dir, COPY_DIRECTORY)
+        if not os.path.isdir(self.dir):
+            return;
+        
+        #make sure files directory isn't empty
+        def iterator_empty(i):
+            Sentinel = namedtuple('Sentinel', [])
+            return type(next(i, Sentinel())) is Sentinel 
+
+        if iterator_empty(os.scandir(files_uri)):
+            return
+
+        
+        command = " ".join(["cp", "-r", files_uri + "/*", self.cwd])
+        if subprocess.run(command, shell=True).returncode != 0:
+           print("{}: file copy failed".format(self.name));
+           raise SystemExit
+
+    def _exec_shell(self):
+        if "shell" not in self.data.keys():
+            return
+
+        command = [SHELL, os.path.join(self.dir, self.data["shell"])] \
+            + self.args
+
+        if subprocess.run(command, cwd=self.cwd).returncode != 0:
+            print("{}: shell command failed".format(self.name))
+            raise SystemExit
+
+    def _config(self):
+        if "config" not in self.data.keys():
+            return
+
+        command = [os.path.join(self.dir, self.data["config"])] + self.args;
+        if subprocess.run(command, cwd=self.cwd).returncode != 0:
+            print("{}: config script failed".format(self.name))
+            raise SystemExit
+
+
+    def new(self):
+        self._copy_files();
+        self._exec_shell();
+        self._config();
+        
+
+def new_command(sliced_argv):
+    name = sliced_argv[0]
+    args = sliced_argv[1:]
+    TemplateEngine(name, args).new()
+
+def list_command(sliced_argv):
+    #check each subfolder for valid files/ and template.json
+    subfolders = [f for f in os.scandir(BASE_URI) if f.is_dir()]
+    templates = [
+        s.name for s in subfolders 
+        if (COPY_DIRECTORY  in (f.name for f in os.scandir(s.path) if f.is_dir()))
+            and (CONFIG_FILE in (f.name for f in os.scandir(s.path) if f.is_file()))
+    ]
+    print("\n".join(templates))
+
+
+if __name__ == "__main__":
+    {
+        "new": new_command,
+        "list": list_command
+    }[sys.argv[1]](sys.argv[2:])
+    print("Thank you for playing Wing Commander!")
