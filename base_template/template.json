@@ -1,4 +1,4 @@
 {
-    "cwd" : "~/.template",
+    "cwd" : "~/.template/staging",
     "shell" : "setup.sh"
 }
