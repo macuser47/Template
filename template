@@ -3,7 +3,8 @@ import sys
 import json
 import subprocess
 import os
-from collections import namedtuple
+from collections import namedtuple, defaultdict
+from functools import partial
 
 BASE_URI = os.path.expanduser("~/.template")
 CONFIG_FILE = "template.json"
@@ -95,10 +96,49 @@ def list_command(sliced_argv):
     ]
     print("\n".join(templates))
 
+def usage_command(sliced_argv, extended=False):
+    if extended:
+        print(
+"""\
+Usage: {0} [COMMAND] [ARGS...]
+Generate content from templates.
+
+ Supported Commands:
+  new     [NAME] [ARGS...]      create new instance of template NAME
+  list                          list all installed templates 
+  help                          display this help and exit 
+  version                       output version information and exit
+
+ Examples:
+  template new cproj            use the cproj template to generate a c project.
+  template new template f       use the 'template' template to create a template
+                                 called f.
+
+Extended documentation on templates: <http://github.com/macuser47/template>
+If you're using this and you're not me, god help you.\
+""".format(sys.argv[0])
+        )
+    else:
+        print(
+"""\
+Usage: {0} [COMMAND] [ARGS]
+Try '{0} help' for more information\
+""".format(sys.argv[0])    
+        )
+
 
 if __name__ == "__main__":
-    {
-        "new": new_command,
-        "list": list_command
-    }[sys.argv[1]](sys.argv[2:])
-    print("Thank you for playing Wing Commander!")
+    if len(sys.argv) < 2:
+        usage_command([])
+        raise SystemExit
+
+    commands = defaultdict(lambda: partial(usage_command, extended=False))
+    commands["new"] = new_command
+    commands["list"] = list_command
+    commands["help"] = partial(usage_command, extended=True)
+
+    sliced_argv = sys.argv[2:]
+    command = sys.argv[1]
+
+    commands[command](sliced_argv)
+    print("\nThank you for playing Wing Commander!")
