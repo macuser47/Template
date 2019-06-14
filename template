@@ -36,12 +36,24 @@ class TemplateEngine:
 
         if "cwd" in self.data.keys():
             self.cwd = os.path.expanduser(self.data["cwd"])
+            #attempt to make directory in case it doesn't exist
+            try:
+                os.makedirs(self.cwd, exist_ok=True)
+            except OSError:
+                raise SystemExit(f"{self.name}: could not find or create {self.cwd}")
+            except PermissionError:
+                raise SystemExit(
+                    f"{self.name}: insufficient permission permissions to \
+                        create {self.cwd}"
+                )
+            except FileExistsError:
+                raise SystemExit(f"{self.name}: {self.cwd} is a file, not a directory")
         else:
             self.cwd = "."
 
     def _copy_files(self):
         files_uri = os.path.join(self.dir, COPY_DIRECTORY)
-        if not os.path.isdir(self.dir):
+        if not os.path.isdir(files_uri):
             return;
         
         #make sure files directory isn't empty

@@ -1,7 +1,7 @@
 #/bin/bash
 if [ "$1" != "" ]; then
-    mkdir -p "../$1/files"
-    mv template.json "../$1"
+    mkdir -p "../../$1/files"
+    mv template.json "../../$1"
     exit 0
 else 
     >&2 echo "sh: template name expected as argument"
