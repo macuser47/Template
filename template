@@ -6,6 +6,10 @@ import os
 from collections import namedtuple, defaultdict
 from functools import partial
 
+PROGRAM_NAME = "template"
+AUTHOR = "Nic Hodlofski"
+VERSION = "1.0"
+
 BASE_URI = os.path.expanduser("~/.template")
 CONFIG_FILE = "template.json"
 COPY_DIRECTORY = "files"
@@ -116,15 +120,23 @@ Generate content from templates.
 
 Extended documentation on templates: <http://github.com/macuser47/template>
 If you're using this and you're not me, god help you.\
-""".format(sys.argv[0])
+""".format(PROGRAM_NAME)
         )
     else:
         print(
 """\
 Usage: {0} [COMMAND] [ARGS]
 Try '{0} help' for more information\
-""".format(sys.argv[0])    
+""".format(PROGRAM_NAME)    
         )
+
+def version_command(sliced_argv):
+    print(
+"""\
+{} v{}
+Written by {}\
+""".format(PROGRAM_NAME, VERSION, AUTHOR)
+    )
 
 
 if __name__ == "__main__":
@@ -136,6 +148,7 @@ if __name__ == "__main__":
     commands["new"] = new_command
     commands["list"] = list_command
     commands["help"] = partial(usage_command, extended=True)
+    commands["version"] = version_command
 
     sliced_argv = sys.argv[2:]
     command = sys.argv[1]
