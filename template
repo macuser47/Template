@@ -53,7 +53,7 @@ class TemplateEngine:
             return
 
         
-        command = " ".join(["cp", "-r", files_uri + "/*", self.cwd])
+        command = " ".join(["cp", "-r", "-n", files_uri + "/*", self.cwd])
         if subprocess.run(command, shell=True).returncode != 0:
            print("{}: file copy failed".format(self.name));
            raise SystemExit
