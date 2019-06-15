@@ -4,6 +4,10 @@ if [ "$1" != "" ]; then
     mv template.json "../../$1"
     cd ..
     rmdir template
+    cd "../$1"
+    git init
+    git add template.json
+    git commit -m "Create template"
     exit 0
 else 
     >&2 echo "sh: template name expected as argument"
