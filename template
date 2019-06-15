@@ -21,18 +21,15 @@ class TemplateEngine:
         self.args = args
         self.dir = os.path.join(BASE_URI, self.name)
         if not os.path.isdir(self.dir):
-            print("{}: {} does not exist".format(name, self.dir)) 
-            raise SystemExit
+            raise SystemExit(f"{self.name}: {self.dir} does not exist")
 
         try:
             with open(os.path.join(self.dir, CONFIG_FILE)) as f:
                 self.data = json.load(f)
         except OSError:
-            print("{}: template.json not found".format(self.name))
-            raise SystemExit
+            raise SystemExit(f"{self.name}: template.json not found")
         except json.decoder.JSONDecodeError:
-            print("{}: template.json incorrectly formatted".format(self.name))
-            raise SystemExit
+            raise SystemExit("{self.name}: template.json incorrectly formatted")
 
         if "cwd" in self.data.keys():
             self.cwd = os.path.expanduser(self.data["cwd"])
@@ -67,8 +64,7 @@ class TemplateEngine:
         
         command = " ".join(["cp", "-r", "-n", files_uri + "/*", self.cwd])
         if subprocess.run(command, shell=True).returncode != 0:
-           print("{}: file copy failed".format(self.name));
-           raise SystemExit
+           raise SystemExit(f"{self.name}: file copy failed")
 
     def _exec_shell(self):
         if "shell" not in self.data.keys():
@@ -78,8 +74,7 @@ class TemplateEngine:
             + self.args
 
         if subprocess.run(command, cwd=self.cwd).returncode != 0:
-            print("{}: shell command failed".format(self.name))
-            raise SystemExit
+            raise SystemExit(f"{self.name}: shell command failed")
 
     def _config(self):
         if "config" not in self.data.keys():
@@ -87,8 +82,7 @@ class TemplateEngine:
 
         command = [os.path.join(self.dir, self.data["config"])] + self.args;
         if subprocess.run(command, cwd=self.cwd).returncode != 0:
-            print("{}: config script failed".format(self.name))
-            raise SystemExit
+            raise SystemExit(f"{self.name}: config script failed")
 
 
     def new(self):
